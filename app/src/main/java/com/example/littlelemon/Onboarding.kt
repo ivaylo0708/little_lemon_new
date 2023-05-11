@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.littlelemon.ui.theme.LittleLemonColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -24,7 +25,13 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun Onboarding(navController: NavController) {
+fun Onboarding(navController: NavController, savePreferencesFun : (firstName : String, lastName : String, email : String) -> Unit) {
+
+    var firstName by remember { mutableStateOf(TextFieldValue()) }
+    var lastName by remember { mutableStateOf(TextFieldValue()) }
+    var email by remember { mutableStateOf(TextFieldValue()) }
+
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
             painterResource(id = R.drawable.logo), contentDescription = "Logo",
@@ -55,49 +62,32 @@ fun Onboarding(navController: NavController) {
             )
         Spacer(modifier = Modifier.height(20.dp))
 
-        var firstName = remember { mutableStateOf(TextFieldValue()) }
-        var lastName = remember { mutableStateOf(TextFieldValue()) }
-        var email = remember { mutableStateOf(TextFieldValue()) }
+
         val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-        val dataStore = StoreFirstName(context)
-        val savedFirstName = dataStore.getFirstName.collectAsState(initial = "")
-
-        val context1 = LocalContext.current
-        val scope1 = rememberCoroutineScope()
-        val dataStore1 = StoreLastName(context)
-        val savedLastName = dataStore1.getLastName.collectAsState(initial = "")
-
-        val context2 = LocalContext.current
-        val scope2 = rememberCoroutineScope()
-        val dataStore2 = StoreEmail(context)
-        val savedEmail = dataStore2.getEmail.collectAsState(initial = "")
 
         TextField(
-            value = firstName.value,
-            onValueChange = { firstName.value = it },
+            value = firstName,
+            onValueChange = { firstName = it },
             label = { Text(text = "First name") })
         Spacer(modifier = Modifier.height(20.dp))
         TextField(
-            value = lastName.value,
-            onValueChange = { lastName.value = it },
+            value = lastName,
+            onValueChange = { lastName = it },
             label = { Text(text = "Last name") })
         Spacer(modifier = Modifier.height(20.dp))
         TextField(
-            value = email.value,
-            onValueChange = { email.value = it },
+            value = email,
+            onValueChange = { email = it },
             label = { Text(text = "Email") })
         Spacer(modifier = Modifier.height(40.dp))
         Button (
             onClick = {
 
-                if(firstName.value == null && lastName.value == null && email.value ==null){
+                if (firstName.text == "" || lastName.text == "" || email.text == "") {
                     Toast.makeText(context,"Registration unsuccessful.Please enter all data" , Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-                    scope.launch { dataStore.saveFirstName(firstName) }
-                    scope1.launch { dataStore1.saveLastName(lastName) }
-                    scope2.launch { dataStore2.saveEmail(email)}
+                    savePreferencesFun(firstName.text, lastName.text, email.text)
                     navController.navigate(Home.route)
 
                 }
